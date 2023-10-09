@@ -10,33 +10,33 @@ module.exports = (sequelize) => {
   router.get("/", async (req, res) => {
     const search = req.query.search;
     const id = req.query.id;
-  
+
     try {
       let whereCondition = {}; // Điều kiện tìm kiếm mặc định là trống
-  
+
       if (search) {
         whereCondition = {
           namecity: {
-            [Op.like]: `%${search}%` // Tìm các thành phố có namecity chứa chuỗi `search`
-          }
+            [Op.like]: `%${search}%`, // Tìm các thành phố có namecity chứa chuỗi `search`
+          },
         };
       }
 
       if (id) {
         whereCondition.idcity = id;
       }
-  
+
       const cities = await City.findAll({
         where: whereCondition, // Sử dụng điều kiện tìm kiếm ở đây
         include: [
           {
             model: Country,
-            attributes: ["namecountry"]
-          }
+            attributes: ["namecountry"],
+          },
         ],
-        attributes: ["idcity", "namecity", "imagecity"]
+        attributes: ["idcity", "namecity", "imagecity"],
       });
-  
+
       res.json(cities);
     } catch (err) {
       console.error("Lỗi truy vấn CSDL:", err);
@@ -71,6 +71,44 @@ module.exports = (sequelize) => {
       });
 
       res.status(201).json({ success: "Thêm thành phố thành công" });
+    } catch (err) {
+      console.error("Lỗi truy vấn CSDL:", err);
+      res.status(500).json({ error: "Lỗi truy vấn CSDL" });
+    }
+  });
+
+  router.patch("/change", async (req, res) => {
+    const id = req.query.id; // Lấy id thành phố từ tham số URL
+    const namecity = req.query.namecity;
+    const imagecity = req.query.imagecity;
+    const idcountry = req.query.idcountry;
+
+    try {
+      // Kiểm tra xem thành phố có tồn tại không
+      const existingCity = await City.findOne({ where: { idcity: id } });
+      const existingCountry = await Country.findOne({ where: { idcountry: idcountry } });
+
+      if (!existingCity) {
+        return res
+          .status(404)
+          .json({ error: "Thành phố không tồn tại trong hệ thống." });
+      }
+
+      if (!existingCountry) {
+        return res
+          .status(404)
+          .json({ error: "Quốc gia không tồn tại trong hệ thống." });
+      }
+
+      // Chỉnh sửa thông tin thành phố
+      existingCity.namecity = namecity;
+      existingCity.imagecity = imagecity;
+      existingCity.idcountry = idcountry;
+
+      // Lưu thông tin chỉnh sửa vào cơ sở dữ liệu
+      await existingCity.save();
+
+      res.json({ success: "Chỉnh sửa thành phố thành công" });
     } catch (err) {
       console.error("Lỗi truy vấn CSDL:", err);
       res.status(500).json({ error: "Lỗi truy vấn CSDL" });
