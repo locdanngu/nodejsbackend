@@ -8,12 +8,35 @@ module.exports = (sequelize) => {
 
   // Route GET /api/products
   router.get("/", async (req, res) => {
+    const search = req.query.search;
+    const id = req.query.id;
+  
     try {
-      const cities = await City.findAll({
-        include: [{ model: Country, attributes: ["namecountry"] }], // Kết hợp với mô hình Country để lấy tên quốc gia
-        attributes: ["idcity", "namecity", "imagecity"], // Chọn thuộc tính namecity từ bảng city
-      });
+      let whereCondition = {}; // Điều kiện tìm kiếm mặc định là trống
+  
+      if (search) {
+        whereCondition = {
+          namecity: {
+            [Op.like]: `%${search}%` // Tìm các thành phố có namecity chứa chuỗi `search`
+          }
+        };
+      }
 
+      if (id) {
+        whereCondition.idcity = id;
+      }
+  
+      const cities = await City.findAll({
+        where: whereCondition, // Sử dụng điều kiện tìm kiếm ở đây
+        include: [
+          {
+            model: Country,
+            attributes: ["namecountry"]
+          }
+        ],
+        attributes: ["idcity", "namecity", "imagecity"]
+      });
+  
       res.json(cities);
     } catch (err) {
       console.error("Lỗi truy vấn CSDL:", err);
