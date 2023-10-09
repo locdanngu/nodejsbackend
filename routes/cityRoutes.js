@@ -116,6 +116,26 @@ module.exports = (sequelize) => {
   });
 
   // Thêm các route khác cho sản phẩm ở đây
+  router.delete("/delete", async (req, res) => {
+    const id = req.query.id; // Lấy id thành phố từ tham số URL
+
+    try {
+      const existingCity = await City.findOne({ where: { idcity: id } });
+
+      if (!existingCity) {
+        return res
+          .status(404)
+          .json({ error: "Thành phố không tồn tại trong hệ thống." });
+      }
+
+      await existingCity.destroy();
+
+      res.json({ success: "Xóa thành phố thành công" });
+    } catch (err) {
+      console.error("Lỗi truy vấn CSDL:", err);
+      res.status(500).json({ error: "Lỗi truy vấn CSDL" });
+    }
+  });
 
   return router;
 };
