@@ -78,5 +78,69 @@ module.exports = (sequelize) => {
     }
   });
 
+  router.patch("/change", async (req, res) => {
+    const id = req.query.id; // Lấy id thành phố từ tham số URL
+    const namehotel = req.query.namehotel;
+    const address = req.query.address;
+    const price = req.query.price;
+    const idcity = req.query.idcity;
+
+    try {
+      // Kiểm tra xem thành phố có tồn tại không
+      const existingCity = await City.findOne({ where: { idcity: idcity } });
+      const existingHomestay = await Homestay.findOne({ where: { idhomestay: id } });
+
+      if (!existingCity) {
+        return res
+          .status(404)
+          .json({ error: "Thành phố không tồn tại trong hệ thống." });
+      }
+
+      if (!existingHomestay) {
+        return res
+          .status(404)
+          .json({ error: "Khách sạn không tồn tại trong hệ thống." });
+      }
+
+      // Chỉnh sửa thông tin thành phố
+      existingHomestay.namehotel = namehotel;
+      existingHomestay.address = address;
+      existingHomestay.price = price;
+      existingHomestay.idcity = idcity;
+
+      // Lưu thông tin chỉnh sửa vào cơ sở dữ liệu
+      await existingHomestay.save();
+
+      res.json({ success: "Chỉnh sửa khách sạn thành công" });
+    } catch (err) {
+      console.error("Lỗi truy vấn CSDL:", err);
+      res.status(500).json({ error: "Lỗi truy vấn CSDL" });
+    }
+  });
+
+  router.delete("/delete", async (req, res) => {
+    const id = req.query.id; // Lấy id thành phố từ tham số URL
+
+    try {
+      // Kiểm tra xem thành phố có tồn tại không
+      const existingHomestay = await Homestay.findOne({ where: { idhomestay: id } });
+
+      if (!existingHomestay) {
+        return res
+          .status(404)
+          .json({ error: "Khách sạn không tồn tại trong hệ thống." });
+      }
+
+      // Lưu thông tin chỉnh sửa vào cơ sở dữ liệu
+      await existingHomestay.destroy();
+
+      res.json({ success: "Xóa khách sạn thành công" });
+    } catch (err) {
+      console.error("Lỗi truy vấn CSDL:", err);
+      res.status(500).json({ error: "Lỗi truy vấn CSDL" });
+    }
+  });
+
+
   return router;
 };
