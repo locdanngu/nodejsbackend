@@ -58,6 +58,7 @@ module.exports = (sequelize) => {
 
   router.patch("/change", async (req, res) => {
     const id = req.query.id;
+    const namecountry = req.query.namecountry;
 
     if (!namecountry) {
       return res.status(400).json({ error: "Vui lòng cung cấp đủ thông tin." });
@@ -81,6 +82,27 @@ module.exports = (sequelize) => {
       await existingCountry.save();
 
       res.json({ success: "Chỉnh sửa quốc gia thành công" });
+    } catch (err) {
+      console.error("Lỗi truy vấn CSDL:", err);
+      res.status(500).json({ error: "Lỗi truy vấn CSDL" });
+    }
+  });
+
+  router.delete("/delete", async (req, res) => {
+    const id = req.query.id; // Lấy id thành phố từ tham số URL
+
+    try {
+      const existingCountry = await City.findOne({ where: { idcountry: id } });
+
+      if (!existingCountry) {
+        return res
+          .status(404)
+          .json({ error: "Quốc gia không tồn tại trong hệ thống." });
+      }
+
+      await existingCountry.destroy();
+
+      res.json({ success: "Xóa quốc gia thành công" });
     } catch (err) {
       console.error("Lỗi truy vấn CSDL:", err);
       res.status(500).json({ error: "Lỗi truy vấn CSDL" });
